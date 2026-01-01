@@ -2,47 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>RMS Tutorials | Poona Film Center Pvt Ltd</title>
+  <title>RMS Tutorials | Poona Film Centre</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<header class="header">
-  <div class="container">
-    <h1>Poona Film Center Pvt Ltd</h1>
-    <p>Rental Management System – Tutorials</p>
+<header class="topbar">
+  <div class="container topbar-inner">
+    <div class="brand">
+      <h1>Poona Film Centre</h1>
+      <p>Rental Management System Tutorials</p>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="Search tutorials..." />
+      <select id="roleFilter">
+        <option value="all">All Roles</option>
+        <option value="manager">Product Manager</option>
+        <option value="user">User</option>
+      </select>
+    </div>
   </div>
 </header>
 
-<section class="hero">
-  <div class="container">
+<section class="home-banner">
+  <div class="banner-overlay"></div>
+  <div class="container banner-content">
     <h2>RMS Video Tutorials</h2>
-    <p>
-      Step-by-step guides for <strong>Store Managers</strong> and
-      <strong>Customers</strong> to use the Rental Management System efficiently.
-    </p>
+    <p>Step-by-step learning with quizzes</p>
   </div>
 </section>
 
-<section class="tutorials">
+<main class="main">
   <div class="container">
-    <h3>Store Manager Guide</h3>
-    <div id="manager-tutorials"></div>
-
-    <h3 style="margin-top:50px;">User Guide</h3>
-    <div id="user-tutorials"></div>
+    <div id="tutorial-root"></div>
   </div>
-</section>
+</main>
 
 <footer class="footer">
-  <div class="container">
-    <p>© 2025 Poona Film Center Pvt Ltd. All Rights Reserved.</p>
-  </div>
+  © 2025 Poona Film Centre Pvt Ltd
 </footer>
 
-<script src="tutorials.js"></script>
+<!-- 🔐 Password Modal -->
+<div id="passwordModal" class="password-modal">
+  <div class="password-box">
+    <h3>Product Manager Access</h3>
+    <p>Please enter password</p>
+
+    <input type="password" id="managerPasswordInput" placeholder="Password" />
+
+    <div class="password-actions">
+      <button id="passwordCancel">Cancel</button>
+      <button id="passwordSubmit">Unlock</button>
+    </div>
+
+    <p id="passwordError" class="password-error"></p>
+  </div>
+</div>
+
+<script src="content.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
