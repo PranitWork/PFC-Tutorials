@@ -53,7 +53,7 @@ function renderQuiz(quiz, key) {
   if (!quiz) return "";
 
   return `
-    <div class="quiz">
+    <div class="quiz" data-quiz="${key}">
       ${quiz.map((q, qi) => `
         <div class="quiz-question">
           <p>${q.question}</p>
@@ -62,7 +62,8 @@ function renderQuiz(quiz, key) {
               <input type="radio"
                      name="${key}-${qi}"
                      value="${oi}"
-                     data-correct="${q.correctIndex}">
+                     data-correct="${q.correctIndex}"
+                     onchange="handleQuizClick(this)">
               ${opt}
             </label>
           `).join("")}
@@ -73,6 +74,18 @@ function renderQuiz(quiz, key) {
     </div>
   `;
 }
+function handleQuizClick(input) {
+  const questionBlock = input.closest(".quiz-question");
+
+  // Remove previous selection highlight
+  questionBlock
+    .querySelectorAll(".quiz-option")
+    .forEach(opt => opt.classList.remove("selected"));
+
+  // Highlight selected option
+  input.closest(".quiz-option").classList.add("selected");
+}
+
 
 window.checkQuiz = key => {
   let correct = 0;

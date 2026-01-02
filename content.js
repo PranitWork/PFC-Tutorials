@@ -14,7 +14,7 @@ const TUTORIAL_CONTENT = [
               {
                 question: "Where do you add a new product?",
                 options: [
-                  "Orders Page",
+                  "Orders data",
                   "Inventory Section",
                   "Reports",
                   "Dashboard"
