@@ -404,11 +404,17 @@ body {
   .sidebar.open {
     left: 0;
   }
+ .topbar-inner {
+ 
+  padding: 14px 15px;
+
+}
 }
 @media (max-width: 524px) {
  #sidebar-root{
     margin-top: 160px;
   }
+   
 }
 
 body.sidebar-open {
