@@ -39,7 +39,7 @@ const TUTORIAL_CONTENT = [
                 correctIndex: 1
               }
             ]
-          }
+          },
         ]
       },
        {

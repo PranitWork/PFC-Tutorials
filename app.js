@@ -3,9 +3,13 @@ const MANAGER_PASSWORD_HASH =
 
 let managerUnlocked = sessionStorage.getItem("mgr_unlocked") === "1";
 
-const root = document.getElementById("tutorial-root");
+const sidebar = document.querySelector(".sidebar");
+const sidebarRoot = document.getElementById("sidebar-root");
+const playerRoot = document.getElementById("player-root");
 const searchInput = document.getElementById("searchInput");
 const roleFilter = document.getElementById("roleFilter");
+const sidebarToggle = document.getElementById("sidebarToggle");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
 
 const passwordModal = document.getElementById("passwordModal");
 const passwordInput = document.getElementById("managerPasswordInput");
@@ -13,160 +17,160 @@ const passwordError = document.getElementById("passwordError");
 const passwordCancel = document.getElementById("passwordCancel");
 const passwordSubmit = document.getElementById("passwordSubmit");
 
-/* 🔐 SHA256 */
-async function sha256(text) {
-  const data = new TextEncoder().encode(text);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+/* HELPERS */
+const isMobile = () => window.innerWidth <= 1024;
 
-/* 🎥 Video Embed */
+const openSidebar = () => {
+  sidebar.classList.add("open");
+  sidebarOverlay.style.display = "block";
+  document.body.classList.add("sidebar-open");
+};
+
+const closeSidebar = () => {
+  sidebar.classList.remove("open");
+  sidebarOverlay.style.display = "none";
+  document.body.classList.remove("sidebar-open");
+};
+
+const toggleSidebar = () => {
+  sidebar.classList.contains("open") ? closeSidebar() : openSidebar();
+};
+
+
+/* VIDEO */
 function getVideoEmbed(url) {
-  if (!url) return "";
-
-  if (url.includes("youtube") || url.includes("youtu.be")) {
+  if (url.includes("youtu")) {
     const id = url.includes("youtu.be")
-      ? url.split("youtu.be/")[1].split(/[?&]/)[0]
+      ? url.split("youtu.be/")[1]
       : new URL(url).searchParams.get("v");
-
     return `<iframe src="https://www.youtube.com/embed/${id}" allowfullscreen></iframe>`;
   }
-
-  if (url.includes("drive.google.com")) {
-    const match = url.match(/\/d\/([^/]+)/);
-    if (match) {
-      return `<iframe src="https://drive.google.com/file/d/${match[1]}/preview"></iframe>`;
-    }
-  }
-
-  if (url.match(/\.(mp4|webm|ogg)$/)) {
-    return `
-      <video controls preload="metadata">
-        <source src="${url}">
-      </video>
-    `;
-  }
-
-  return `<a href="${url}" target="_blank">Open Video</a>`;
+  return `<video controls src="${url}"></video>`;
 }
 
-/* 🧠 Quiz */
+/* QUIZ */
 function renderQuiz(quiz, key) {
   if (!quiz) return "";
+
   return `
     <div class="quiz">
-      <h5>Quick Quiz</h5>
-      ${quiz.map((q, i) => `
+      ${quiz.map((q, qi) => `
         <div class="quiz-question">
           <p>${q.question}</p>
-          ${q.options.map((o, oi) => `
-            <label>
-              <input type="radio" name="${key}-${i}" value="${oi}">
-              ${o}
+          ${q.options.map((opt, oi) => `
+            <label class="quiz-option">
+              <input type="radio"
+                     name="${key}-${qi}"
+                     value="${oi}"
+                     data-correct="${q.correctIndex}">
+              ${opt}
             </label>
           `).join("")}
         </div>
       `).join("")}
       <button class="quiz-submit" onclick="checkQuiz('${key}')">Submit Quiz</button>
-      <p class="quiz-result" id="result-${key}"></p>
+      <div class="quiz-result" id="result-${key}"></div>
     </div>
   `;
 }
 
-window.checkQuiz = function (key) {
-  let score = 0, total = 0;
+window.checkQuiz = key => {
+  let correct = 0;
+  let total = 0;
 
-  TUTORIAL_CONTENT.forEach(section =>
-    section.topics.forEach(topic =>
-      topic.videos.forEach(video =>
-        video.quiz?.forEach((q, i) => {
-          const ans = document.querySelector(`input[name="${key}-${i}"]:checked`);
-          if (ans) {
-            total++;
-            if (+ans.value === q.correctIndex) score++;
-          }
-        })
-      )
-    )
-  );
+  document.querySelectorAll(".quiz-question").forEach(q => {
+    const selected = q.querySelector(`input[name^="${key}"]:checked`);
+    const options = q.querySelectorAll(".quiz-option");
 
-  document.getElementById(`result-${key}`).textContent =
-    `Score: ${score}/${total}`;
-};
+    options.forEach(o => o.classList.remove("correct", "wrong"));
 
-/* 🔄 MAIN RENDER */
-function render() {
-  root.innerHTML = "";
+    if (!selected) return;
+    total++;
 
-  const query = searchInput.value.toLowerCase().trim();
-  const selectedRole = roleFilter.value;
+    const selectedIndex = +selected.value;
+    const correctIndex = +selected.dataset.correct;
 
-  TUTORIAL_CONTENT.forEach(section => {
-
-    if (section.role === "manager" && !managerUnlocked) return;
-    if (selectedRole !== "all" && selectedRole !== section.role) return;
-
-    const filteredTopics = section.topics
-      .map(topic => {
-        const filteredVideos = topic.videos.filter(video =>
-          section.roleLabel.toLowerCase().includes(query) ||
-          topic.title.toLowerCase().includes(query) ||
-          video.title.toLowerCase().includes(query) ||
-          video.description.toLowerCase().includes(query)
-        );
-        return filteredVideos.length ? { ...topic, videos: filteredVideos } : null;
-      })
-      .filter(Boolean);
-
-    if (!filteredTopics.length) return;
-
-    const roleSection = document.createElement("div");
-    roleSection.className = "role-section";
-    roleSection.innerHTML = `<h2 class="role-title">${section.roleLabel}</h2>`;
-
-    filteredTopics.forEach(topic => {
-      const topicEl = document.createElement("div");
-      topicEl.className = "topic";
-
-      topicEl.innerHTML = `
-        <div class="topic-header">
-          <span>${topic.title}</span>
-          <span class="topic-toggle">+</span>
-        </div>
-        <div class="topic-body">
-          ${topic.videos.map(video => `
-            <div class="video">
-              <h4>${video.title}</h4>
-              <p>${video.description}</p>
-              <div class="video-frame">
-                ${getVideoEmbed(video.url)}
-              </div>
-              ${renderQuiz(
-                video.quiz,
-                `${section.role}-${topic.title}-${video.title}`
-              )}
-            </div>
-          `).join("")}
-        </div>
-      `;
-
-      topicEl.querySelector(".topic-header").onclick = () => {
-        topicEl.classList.toggle("active");
-      };
-
-      roleSection.appendChild(topicEl);
+    options.forEach((opt, i) => {
+      if (i === correctIndex) opt.classList.add("correct");
+      if (i === selectedIndex && selectedIndex !== correctIndex) {
+        opt.classList.add("wrong");
+      }
     });
 
-    root.appendChild(roleSection);
+    if (selectedIndex === correctIndex) correct++;
+  });
+
+  document.getElementById(`result-${key}`).textContent =
+    correct === total
+      ? `✅ Perfect! ${correct}/${total}`
+      : `❌ ${correct}/${total} correct. Correct answers highlighted above.`;
+};
+
+/* PLAY VIDEO */
+function playVideo(video, key) {
+  playerRoot.innerHTML = `
+    <h2>${video.title}</h2>
+    <p>${video.description}</p>
+    <div class="video-frame">${getVideoEmbed(video.url)}</div>
+    ${renderQuiz(video.quiz, key)}
+  `;
+}
+
+/* RENDER SIDEBAR */
+function render() {
+  sidebarRoot.innerHTML = "";
+  const query = searchInput.value.toLowerCase().trim();
+  const role = roleFilter.value;
+
+  TUTORIAL_CONTENT.forEach(section => {
+    if (section.role === "manager" && !managerUnlocked) return;
+    if (role !== "all" && role !== section.role) return;
+
+    sidebarRoot.insertAdjacentHTML("beforeend", `<h4>${section.roleLabel}</h4>`);
+
+    section.topics.forEach(topic => {
+      const matches = topic.videos.filter(v =>
+        !query ||
+        topic.title.toLowerCase().includes(query) ||
+        v.title.toLowerCase().includes(query)
+      );
+      if (!matches.length) return;
+
+      const header = document.createElement("div");
+      header.className = "sidebar-topic-header";
+      header.textContent = topic.title;
+
+      const list = document.createElement("div");
+      list.className = "sidebar-video-list open";
+
+      matches.forEach(video => {
+        const item = document.createElement("div");
+        item.className = "sidebar-video";
+        item.textContent = video.title;
+        item.onclick = () => {
+          playVideo(video, `${section.role}-${topic.title}`);
+          if (isMobile()) closeSidebar();
+        };
+        list.appendChild(item);
+      });
+
+      header.onclick = () => {
+        document.querySelectorAll(".sidebar-video-list.open")
+          .forEach(l => l !== list && l.classList.remove("open"));
+        list.classList.toggle("open");
+      };
+
+      sidebarRoot.append(header, list);
+    });
   });
 }
 
-/* 🔍 SEARCH FIX */
-searchInput.addEventListener("input", render);
+/* EVENTS */
+searchInput.addEventListener("input", () => {
+  if (isMobile()) openSidebar();
+  render();
+});
 
-/* 🎭 ROLE FILTER FIX + MANAGER LOCK */
 roleFilter.addEventListener("change", () => {
   if (roleFilter.value === "manager" && !managerUnlocked) {
     passwordModal.style.display = "flex";
@@ -176,23 +180,19 @@ roleFilter.addEventListener("change", () => {
   render();
 });
 
-/* 🔐 PASSWORD HANDLING */
-passwordCancel.onclick = () => {
-  passwordModal.style.display = "none";
-  passwordInput.value = "";
-};
+passwordCancel.onclick = () => passwordModal.style.display = "none";
 
 passwordSubmit.onclick = async () => {
-  const entered = passwordInput.value.trim();
-  if (!entered) return;
+  const data = new TextEncoder().encode(passwordInput.value);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  const hex = Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
 
-  const hash = await sha256(entered);
-  if (hash === MANAGER_PASSWORD_HASH) {
+  if (hex === MANAGER_PASSWORD_HASH) {
     managerUnlocked = true;
     sessionStorage.setItem("mgr_unlocked", "1");
     passwordModal.style.display = "none";
-    passwordInput.value = "";
-    passwordError.textContent = "";
     roleFilter.value = "manager";
     render();
   } else {
@@ -200,5 +200,7 @@ passwordSubmit.onclick = async () => {
   }
 };
 
-/* 🚀 INIT */
+sidebarToggle.onclick = openSidebar;
+sidebarOverlay.onclick = closeSidebar;
+
 render();

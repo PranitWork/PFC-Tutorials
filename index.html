@@ -16,7 +16,7 @@
     </div>
 
     <div class="controls">
-      <input type="text" id="searchInput" placeholder="Search tutorials..." />
+      <input type="text" id="searchInput" placeholder="Search tutorials…" />
       <select id="roleFilter">
         <option value="all">All Roles</option>
         <option value="manager">Product Manager</option>
@@ -26,25 +26,40 @@
   </div>
 </header>
 
+<!-- Mobile Navbar -->
+<div class="mobile-nav">
+  <button id="sidebarToggle">☰</button>
+  <span>Tutorials</span>
+</div>
+
+<div id="sidebarOverlay"></div>
+
 <section class="home-banner">
   <div class="banner-overlay"></div>
   <div class="container banner-content">
     <h2>RMS Video Tutorials</h2>
-    <p>Step-by-step learning with quizzes</p>
+    <p>Internal learning dashboard</p>
   </div>
 </section>
 
-<main class="main">
-  <div class="container">
-    <div id="tutorial-root"></div>
-  </div>
+<main class="dashboard">
+  <aside class="sidebar">
+    <div id="sidebar-root"></div>
+  </aside>
+
+  <section class="content">
+    <div id="player-root" class="player-placeholder">
+      <h3>Select a video</h3>
+      <p>Choose a tutorial from the left panel</p>
+    </div>
+  </section>
 </main>
 
 <footer class="footer">
   © 2025 Poona Film Centre Pvt Ltd
 </footer>
 
-<!-- 🔐 Password Modal -->
+<!-- PASSWORD MODAL -->
 <div id="passwordModal" class="password-modal">
   <div class="password-box">
     <h3>Product Manager Access</h3>
